@@ -1,6 +1,7 @@
 package com.example.mymusicapp.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.mymusicapp.Activity.NowPlayingActivity;
 import com.example.mymusicapp.R;
 import com.example.mymusicapp.API.Song;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecyclerViewAdapter.MusicRecyclerViewViewHolder> {
@@ -36,16 +39,24 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
 
     @Override
     public void onBindViewHolder(@NonNull MusicRecyclerViewAdapter.MusicRecyclerViewViewHolder holder, int position) {
-        final Song song = songList.get(position);
+        Song song = songList.get(position);
         String title = song.getTitle();
         String singer = song.getSinger();
-        String imageUrl = "https://disk.mediaindonesia.com/files/news/2022/12/30/WhatsApp%20Image%202022-12-22%20at%2017.07.10%20(1).jpg";
+        String coverAlbum = "https://disk.mediaindonesia.com/files/news/2022/12/30/WhatsApp%20Image%202022-12-22%20at%2017.07.10%20(1).jpg";
         holder.musicTitle.setText(title);
         holder.musicSinger.setText(singer);
         Glide.with(holder.itemView.getContext())
-                .load(imageUrl)
+                .load(coverAlbum)
                 .apply(new RequestOptions().fitCenter())
                 .into(holder.albumImage);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, NowPlayingActivity.class);
+                intent.putExtra("music", song);
+                context.startActivity(intent);
+            }
+        });
     }
 
     @Override
