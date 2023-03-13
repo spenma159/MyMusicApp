@@ -113,15 +113,15 @@
             android:layout_toStartOf="@+id/end_duration"
             android:layout_centerVertical="true"/>
 
-<!--        <TextView-->
-<!--            android:id="@+id/end_duration"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="9.00"-->
-<!--            android:textColor="@color/white"-->
-<!--            android:textSize="16sp"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:layout_alignParentRight="true"/>-->
+        <TextView
+            android:id="@+id/end_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="9.00"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"/>
     </RelativeLayout>
 
     <RelativeLayout

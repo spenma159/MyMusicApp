@@ -8,6 +8,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -37,6 +38,7 @@ public class NowPlayingActivity extends AppCompatActivity {
     static URI uri;
     private boolean flagPlay;
     private Handler handler = new Handler();
+    private MediaMetadataRetriever metadataRetriever;
     private void initialize (){
         btnBack = findViewById(R.id.btn_back_now_playing);
         albumCover = findViewById(R.id.cover_album);
@@ -91,22 +93,11 @@ public class NowPlayingActivity extends AppCompatActivity {
                     seekBarSong.setProgress(currentPosition);
                     txtCurrDuration.setText(formatedTime(currentPosition));
                 }
-                handler.postDelayed(this,1000);
+                handler.postDelayed(this,100);
             }
         });
+        managePlayer();
 
-
-
-
-
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(NowPlayingActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
 
     }
 
@@ -132,41 +123,57 @@ public class NowPlayingActivity extends AppCompatActivity {
         Log.i(TAG, "url : " + song.getUrl());
         Log.i(TAG, "media player : " + mediaPlayer);
 
-        Glide.with(NowPlayingActivity.this)
-                .load(song.getAlbum())
-                .apply(new RequestOptions().fitCenter())
-                .into(albumCover);
+//        Glide.with(NowPlayingActivity.this)
+//                .load(song.getAlbum())
+//                .apply(new RequestOptions().fitCenter())
+//                .into(albumCover);
         txtTitle.setText(song.getTitle());
         txtSinger.setText(song.getSinger());
 
-        btnPlayPause.setImageResource(R.drawable.ic_pause);
+        if(song != null){
+            btnPlayPause.setImageResource(R.drawable.ic_pause);
+        }
         if(mediaPlayer != null){
             mediaPlayer.stop();
-            mediaPlayer.release();
+            mediaPlayer.release();;
         }
         mediaPlayer = MediaPlayer.create(this,Uri.parse(song.getUrl()));
-        Log.i(TAG, "media player : " + mediaPlayer);
-        play();
+        int durationTotal = mediaPlayer.getDuration();
+        txtEndDuration.setText(String.valueOf(durationTotal));
+        Log.i(TAG, "Duration total: " + durationTotal);
+        mediaPlayer.start();
+        flagPlay = true;
+    }
+    private void managePlayer(){
         btnPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(flagPlay == true){
                     btnPlayPause.setImageResource(R.drawable.ic_play);
-                    pause();
+                    flagPlay = false;
+                    mediaPlayer.pause();
                 }else {
                     btnPlayPause.setImageResource(R.drawable.ic_pause);
-                    play();
+                    flagPlay = true;
+                    if(mediaPlayer == null){
+                        Intent intent = NowPlayingActivity.this.getIntent();
+                        Song song = (Song) intent.getSerializableExtra("music");
+                        mediaPlayer = MediaPlayer.create(NowPlayingActivity.this,Uri.parse(song.getUrl()));
+                    }
+                    mediaPlayer.start();
                 }
             }
         });
-    }
-    private void play(){
-        mediaPlayer.start();
-        flagPlay = true;
-    }
-    private  void pause(){
-        mediaPlayer.pause();
-        flagPlay = false;
-    }
 
+        btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                btnPlayPause.setImageResource(R.drawable.ic_play);
+                flagPlay = false;
+                mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+        });
+    }
 }
