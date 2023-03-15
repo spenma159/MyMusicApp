@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.example.mymusicapp.API.Song;
+import com.example.mymusicapp.EventBus.MusicStartEvent;
 import com.example.mymusicapp.EventBus.PlayPauseMusicEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -19,7 +20,7 @@ public class PlayPauseReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         songList = (List<Song>) intent.getSerializableExtra("music");
-        position = intent.getIntExtra("position", -1);
         EventBus.getDefault().post(new PlayPauseMusicEvent(position, songList));
+//        EventBus.getDefault().post(new MusicStartEvent(songList, position));
     }
 }

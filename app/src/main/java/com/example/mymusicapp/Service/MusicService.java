@@ -67,10 +67,10 @@ public class MusicService extends Service {
 
 
         Intent intentPlayPauseMusic = new Intent(this, PlayPauseReceiver.class);
-        intentPlayPauseMusic.putExtra("position",position);
         intentPlayPauseMusic.putExtra("music", (Serializable) songList);
         PendingIntent pendingIntentPlayPauseMusic = PendingIntent.getBroadcast(this,0, intentPlayPauseMusic, 0);
         remoteViews.setOnClickPendingIntent(R.id.play_button_notification, pendingIntentPlayPauseMusic);
+
 
         Intent clickIntent = new Intent(this, NowPlayingActivity.class);
         clickIntent.putExtra("position",position);
@@ -192,8 +192,9 @@ public class MusicService extends Service {
 
     public static void nextMusic(Context context, int position, List<Song> songList){
         Intent intent = new Intent(context, MusicService.class);
-        if(position < songList.size() - 1) intent.putExtra("position", ++position);
-        else intent.putExtra("position", 0);
+//        if(position < songList.size() - 1) intent.putExtra("position", ++position);
+//        else intent.putExtra("position", 0);
+        intent.putExtra("position", position);
         intent.putExtra("music", (Serializable) songList);
         intent.setAction(ACTION_NEXT);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
@@ -205,8 +206,7 @@ public class MusicService extends Service {
 
     public static void prevMusic(Context context, int position, List<Song> songList){
         Intent intent = new Intent(context, MusicService.class);
-        if(position > 0) intent.putExtra("position", --position);
-        else intent.putExtra("position", songList.size() - 1);
+        intent.putExtra("position", position);
         intent.putExtra("music", (Serializable) songList);
         intent.setAction(ACTION_PREV);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){

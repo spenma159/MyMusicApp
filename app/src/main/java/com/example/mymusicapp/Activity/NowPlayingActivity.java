@@ -93,7 +93,7 @@ public class NowPlayingActivity extends AppCompatActivity {
         startService(intent1);
         MusicService.startMusic(this, position, songList);
         seekBar();
-        buttonClick(position, songList);
+        buttonClick(songList);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class NowPlayingActivity extends AppCompatActivity {
         super.onStart();
     }
 
-    private void buttonClick(int position, List<Song> songList) {
+    private void buttonClick(List<Song> songList) {
         btnPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -133,13 +133,24 @@ public class NowPlayingActivity extends AppCompatActivity {
         btnPlayNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(position < songList.size() - 1){
+                    position++;
+                }else{
+                    position = 0;
+                }
                 MusicService.nextMusic(getApplicationContext(), position, songList);
+
             }
         });
 
         btnPlayPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(position > 0){
+                    position--;
+                }else {
+                    position = songList.size() - 1;
+                }
                 MusicService.prevMusic(getApplicationContext(), position, songList);
             }
         });
@@ -213,20 +224,43 @@ public class NowPlayingActivity extends AppCompatActivity {
                 .load(songList.get(position).getAlbum())
                 .apply(new RequestOptions().fitCenter())
                 .into(albumCover);
+        seekBar();
     }
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(PlayPauseMusicEvent event) {
-        if(!flagPlay){
+        songList = MusicStartEvent.songList;
+        position = MusicStartEvent.position;
+        txtTitle.setText(songList.get(position).getTitle());
+        txtSinger.setText(songList.get(position).getSinger());
+        Glide.with(this)
+                .load(songList.get(position).getAlbum())
+                .apply(new RequestOptions().fitCenter())
+                .into(albumCover);
+        seekBar();
+        if(mediaPlayer == null){
+            MusicService.startMusic(getApplicationContext(), position, PlayPauseMusicEvent.songList);
             btnPlayPause.setImageResource(R.drawable.ic_pause);
             flagPlay = true;
-            MusicService.resumeMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
-        }else{
+        }else if(!flagPlay){
+            MusicService.resumeMusic(getApplicationContext(), position, PlayPauseMusicEvent.songList);
+            btnPlayPause.setImageResource(R.drawable.ic_pause);
+            flagPlay = true;
+        }else {
+            MusicService.pauseMusic(getApplicationContext(), position, PlayPauseMusicEvent.songList);
             btnPlayPause.setImageResource(R.drawable.ic_play);
             flagPlay = false;
-            MusicService.pauseMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
         }
+//        if(!flagPlay){
+//            btnPlayPause.setImageResource(R.drawable.ic_pause);
+//            flagPlay = true;
+//            MusicService.resumeMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
+//        }else{
+//            btnPlayPause.setImageResource(R.drawable.ic_play);
+//            flagPlay = false;
+//            MusicService.pauseMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
+//        }
     }
 
 
