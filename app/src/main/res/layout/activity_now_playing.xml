@@ -140,7 +140,7 @@
                 android:id="@+id/play_button_now_playing"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@drawable/ic_play"
+                android:src="@drawable/ic_pause"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"/>
             <ImageView

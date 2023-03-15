@@ -1,5 +1,6 @@
 package com.example.mymusicapp.Adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.mymusicapp.Activity.NowPlayingActivity;
 import com.example.mymusicapp.R;
 import com.example.mymusicapp.API.Song;
+import com.example.mymusicapp.Service.MusicService;
 
 import java.io.Serializable;
 import java.util.List;
@@ -38,7 +40,7 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MusicRecyclerViewAdapter.MusicRecyclerViewViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MusicRecyclerViewAdapter.MusicRecyclerViewViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Song song = songList.get(position);
         String title = song.getTitle();
         String singer = song.getSinger();
@@ -53,7 +55,8 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(context, NowPlayingActivity.class);
-                intent.putExtra("music", song);
+                intent.putExtra("position",position);
+                intent.putExtra("music", (Serializable) songList);
                 context.startActivity(intent);
             }
         });
