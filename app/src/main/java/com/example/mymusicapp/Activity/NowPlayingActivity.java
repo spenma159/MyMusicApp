@@ -7,10 +7,6 @@ import static com.example.mymusicapp.App.App.position;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -18,15 +14,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.mymusicapp.API.Song;
 import com.example.mymusicapp.EventBus.MusicStartEvent;
+import com.example.mymusicapp.EventBus.NextMusicEvent;
 import com.example.mymusicapp.EventBus.PlayPauseMusicEvent;
+import com.example.mymusicapp.EventBus.PrevMusicEvent;
 import com.example.mymusicapp.R;
-import com.example.mymusicapp.Receiver.PlayPauseReceiver;
 import com.example.mymusicapp.Service.MusicService;
 
 import org.greenrobot.eventbus.EventBus;
@@ -79,18 +75,20 @@ public class NowPlayingActivity extends AppCompatActivity {
         initialize();
         Intent intent = this.getIntent();
         songList = (List<Song>) intent.getSerializableExtra("music");
-        position = intent.getIntExtra("position", -1);
+//        position = intent.getIntExtra("position", -1);
         txtTitle.setText(songList.get(position).getTitle());
         txtSinger.setText(songList.get(position).getSinger());
         Glide.with(this)
                 .load(songList.get(position).getAlbum())
                 .apply(new RequestOptions().fitCenter())
                 .into(albumCover);
-        EventBus.getDefault().register(this);
-        Intent intent1 = new Intent(this, MusicService.class);
-        intent1.putExtra("position", position);
-        intent1.putExtra("music", (Serializable) songList);
-        startService(intent1);
+
+        if(mediaPlayer == null){
+            Intent intent1 = new Intent(this, MusicService.class);
+            intent1.putExtra("position", position);
+            intent1.putExtra("music", (Serializable) songList);
+            startService(intent1);
+        }
         MusicService.startMusic(this, position, songList);
         seekBar();
         buttonClick(songList);
@@ -99,6 +97,7 @@ public class NowPlayingActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        EventBus.getDefault().register(this);
     }
 
     private void buttonClick(List<Song> songList) {
@@ -133,19 +132,22 @@ public class NowPlayingActivity extends AppCompatActivity {
         btnPlayNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                flagPlay = true;
+                btnPlayPause.setImageResource(R.drawable.ic_pause);
                 if(position < songList.size() - 1){
                     position++;
                 }else{
                     position = 0;
                 }
                 MusicService.nextMusic(getApplicationContext(), position, songList);
-
             }
         });
 
         btnPlayPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                flagPlay = true;
+                btnPlayPause.setImageResource(R.drawable.ic_pause);
                 if(position > 0){
                     position--;
                 }else {
@@ -157,11 +159,11 @@ public class NowPlayingActivity extends AppCompatActivity {
     }
 
     private void seekBar(){
-//        FFmpegMediaMetadataRetriever mFFmpegMediaMetadataRetriever = new FFmpegMediaMetadataRetriever();
-//        mFFmpegMediaMetadataRetriever.setDataSource(songList.get(position).getUrl());
-//        String mVideoDuration =  mFFmpegMediaMetadataRetriever .extractMetadata(FFmpegMediaMetadataRetriever .METADATA_KEY_DURATION);
-//        long mTimeInMilliseconds= Long.parseLong(mVideoDuration);
-//        Log.i(TAG, "duration: " + mTimeInMilliseconds);
+        if(mediaPlayer != null){
+            int totalDuration = mediaPlayer.getDuration() / 1000;
+            seekBarSong.setMax(totalDuration);
+            txtEndDuration.setText(formattedTime(totalDuration));
+        }
         seekBarSong.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -191,6 +193,12 @@ public class NowPlayingActivity extends AppCompatActivity {
                 handler.postDelayed(this,100);
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -230,20 +238,7 @@ public class NowPlayingActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(PlayPauseMusicEvent event) {
-        songList = MusicStartEvent.songList;
-        position = MusicStartEvent.position;
-        txtTitle.setText(songList.get(position).getTitle());
-        txtSinger.setText(songList.get(position).getSinger());
-        Glide.with(this)
-                .load(songList.get(position).getAlbum())
-                .apply(new RequestOptions().fitCenter())
-                .into(albumCover);
-        seekBar();
-        if(mediaPlayer == null){
-            MusicService.startMusic(getApplicationContext(), position, PlayPauseMusicEvent.songList);
-            btnPlayPause.setImageResource(R.drawable.ic_pause);
-            flagPlay = true;
-        }else if(!flagPlay){
+        if(!flagPlay){
             MusicService.resumeMusic(getApplicationContext(), position, PlayPauseMusicEvent.songList);
             btnPlayPause.setImageResource(R.drawable.ic_pause);
             flagPlay = true;
@@ -252,20 +247,31 @@ public class NowPlayingActivity extends AppCompatActivity {
             btnPlayPause.setImageResource(R.drawable.ic_play);
             flagPlay = false;
         }
-//        if(!flagPlay){
-//            btnPlayPause.setImageResource(R.drawable.ic_pause);
-//            flagPlay = true;
-//            MusicService.resumeMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
-//        }else{
-//            btnPlayPause.setImageResource(R.drawable.ic_play);
-//            flagPlay = false;
-//            MusicService.pauseMusic(getApplicationContext(),PlayPauseMusicEvent.position, PlayPauseMusicEvent.songList);
-//        }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(NextMusicEvent event) {
+        flagPlay = true;
+        btnPlayPause.setImageResource(R.drawable.ic_pause);
+        if(position < NextMusicEvent.songList.size() - 1){
+            position++;
+        }else{
+            position = 0;
+        }
+        MusicService.nextMusic(getApplicationContext(), position, NextMusicEvent.songList);
+    }
 
-
-
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PrevMusicEvent event) {
+        flagPlay = true;
+        btnPlayPause.setImageResource(R.drawable.ic_pause);
+        if(position > 0){
+            position--;
+        }else {
+            position = PrevMusicEvent.songList.size() - 1;
+        }
+        MusicService.prevMusic(getApplicationContext(), position, PrevMusicEvent.songList);
+    }
 
 
 

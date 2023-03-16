@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.mymusicapp.Activity.NowPlayingActivity;
+import com.example.mymusicapp.App.App;
 import com.example.mymusicapp.R;
 import com.example.mymusicapp.API.Song;
 import com.example.mymusicapp.Service.MusicService;
@@ -55,7 +56,8 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(context, NowPlayingActivity.class);
-                intent.putExtra("position",position);
+//                intent.putExtra("position",position);
+                App.position = position;
                 intent.putExtra("music", (Serializable) songList);
                 context.startActivity(intent);
             }

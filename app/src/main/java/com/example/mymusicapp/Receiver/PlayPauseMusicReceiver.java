@@ -14,13 +14,13 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
-public class PlayPauseReceiver extends BroadcastReceiver {
+public class PlayPauseMusicReceiver extends BroadcastReceiver {
 
     private List<Song> songList;
     @Override
     public void onReceive(Context context, Intent intent) {
         songList = (List<Song>) intent.getSerializableExtra("music");
-        EventBus.getDefault().post(new PlayPauseMusicEvent(position, songList));
-//        EventBus.getDefault().post(new MusicStartEvent(songList, position));
+        EventBus.getDefault().post(new PlayPauseMusicEvent(songList));
+        EventBus.getDefault().post(new MusicStartEvent(songList, position));
     }
 }

@@ -27,11 +27,12 @@ import com.example.mymusicapp.API.Song;
 import com.example.mymusicapp.Activity.NowPlayingActivity;
 import com.example.mymusicapp.EventBus.MusicStartEvent;
 import com.example.mymusicapp.R;
-import com.example.mymusicapp.Receiver.PlayPauseReceiver;
+import com.example.mymusicapp.Receiver.NextMusicReceiver;
+import com.example.mymusicapp.Receiver.PlayPauseMusicReceiver;
+import com.example.mymusicapp.Receiver.PrevMusicReceiver;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
@@ -65,12 +66,23 @@ public class MusicService extends Service {
         if(!flagPlay) remoteViews.setImageViewResource(R.id.play_button_notification, R.drawable.ic_play2);
         else remoteViews.setImageViewResource(R.id.play_button_notification, R.drawable.ic_pause2);
 
-
-        Intent intentPlayPauseMusic = new Intent(this, PlayPauseReceiver.class);
+//        PlayPause Button Notification
+        Intent intentPlayPauseMusic = new Intent(this, PlayPauseMusicReceiver.class);
         intentPlayPauseMusic.putExtra("music", (Serializable) songList);
         PendingIntent pendingIntentPlayPauseMusic = PendingIntent.getBroadcast(this,0, intentPlayPauseMusic, 0);
         remoteViews.setOnClickPendingIntent(R.id.play_button_notification, pendingIntentPlayPauseMusic);
 
+//        Next Button Notification
+        Intent intentNextMusic = new Intent(this, NextMusicReceiver.class);
+        intentNextMusic.putExtra("music", (Serializable) songList);
+        PendingIntent pendingIntentNextMusic = PendingIntent.getBroadcast(this,0, intentNextMusic, 0);
+        remoteViews.setOnClickPendingIntent(R.id.next_button_notification, pendingIntentNextMusic);
+
+//        Prev Button Notification
+        Intent intentPrevMusic = new Intent(this, PrevMusicReceiver.class);
+        intentPrevMusic.putExtra("music", (Serializable) songList);
+        PendingIntent pendingIntentPrevMusic = PendingIntent.getBroadcast(this,0, intentPrevMusic, 0);
+        remoteViews.setOnClickPendingIntent(R.id.prev_button_notification, pendingIntentPrevMusic);
 
         Intent clickIntent = new Intent(this, NowPlayingActivity.class);
         clickIntent.putExtra("position",position);
@@ -90,7 +102,7 @@ public class MusicService extends Service {
                 case ACTION_START:
                 case ACTION_PREV:
                 case ACTION_NEXT:
-                    play(position, songList);
+                    play(songList);
                     break;
                 case ACTION_RESUME:
                     resume();
@@ -125,7 +137,7 @@ public class MusicService extends Service {
         }
     }
 
-    public void play(int position, List<Song> songList){
+    public void play(List<Song> songList){
         if(mediaPlayer == null){
             Log.i("TAG", "song list in position: " + songList.get(position).getUrl());
             mediaPlayer = MediaPlayer.create(getApplicationContext(), Uri.parse(songList.get(position).getUrl()));
@@ -134,7 +146,7 @@ public class MusicService extends Service {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
                     if(position + 1 <= songList.size()){
-                        EventBus.getDefault().post(new MusicStartEvent(songList, position + 1));
+                        EventBus.getDefault().post(new MusicStartEvent(songList, position++));
                     }else {
                         stopMusic(getApplicationContext(),position,songList);
                     }
@@ -186,14 +198,12 @@ public class MusicService extends Service {
         if(mediaPlayer != null){
             mediaPlayer.release();
             mediaPlayer = null;
-            Toast.makeText(this, "Media player released", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "Media player released", Toast.LENGTH_SHORT).show();
         }
     }
 
     public static void nextMusic(Context context, int position, List<Song> songList){
         Intent intent = new Intent(context, MusicService.class);
-//        if(position < songList.size() - 1) intent.putExtra("position", ++position);
-//        else intent.putExtra("position", 0);
         intent.putExtra("position", position);
         intent.putExtra("music", (Serializable) songList);
         intent.setAction(ACTION_NEXT);

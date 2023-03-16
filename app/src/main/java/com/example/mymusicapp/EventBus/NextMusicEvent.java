@@ -4,10 +4,9 @@ import com.example.mymusicapp.API.Song;
 
 import java.util.List;
 
-public class PlayPauseMusicEvent {
+public class NextMusicEvent {
     public static List<Song> songList;
-
-    public PlayPauseMusicEvent(List<Song> songList){
-        PlayPauseMusicEvent.songList = songList;
+    public NextMusicEvent(List<Song> songList) {
+        this.songList = songList;
     }
 }
