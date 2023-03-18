@@ -5,8 +5,10 @@ import com.example.mymusicapp.API.Song;
 import java.util.List;
 
 public class NextMusicEvent {
-    public static List<Song> songList;
-    public NextMusicEvent(List<Song> songList) {
-        this.songList = songList;
+//    public List<Song> songList;
+//    public int position;
+    public NextMusicEvent() {
+//        this.position = position;
+//        this.songList = songList;
     }
 }

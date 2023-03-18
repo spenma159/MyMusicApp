@@ -4,7 +4,8 @@ import com.example.mymusicapp.API.Song;
 
 import java.util.List;
 
-public class PrevMusicEvent {
-    public PrevMusicEvent() {
+public class ResumeMusicEvent {
+
+    public ResumeMusicEvent() {
     }
 }

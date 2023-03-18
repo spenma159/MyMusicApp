@@ -5,9 +5,11 @@ import com.example.mymusicapp.API.Song;
 import java.util.List;
 
 public class PlayPauseMusicEvent {
-    public static List<Song> songList;
+//    public List<Song> songList;
+//    public int position;
 
-    public PlayPauseMusicEvent(List<Song> songList){
-        PlayPauseMusicEvent.songList = songList;
+    public PlayPauseMusicEvent(){
+//        this.songList = songList;
+//        this.position = position;
     }
 }

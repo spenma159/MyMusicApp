@@ -10,8 +10,8 @@ import android.provider.MediaStore;
 public class App extends Application {
 
     public static final String CHANNEL_ID = "channel music";
-    public static int position;
-    public static MediaPlayer mediaPlayer;
+//    public static int position;
+//    public static MediaPlayer mediaPlayer;
 
 
 

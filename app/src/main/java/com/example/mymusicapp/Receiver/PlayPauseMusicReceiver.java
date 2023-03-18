@@ -1,6 +1,6 @@
 package com.example.mymusicapp.Receiver;
 
-import static com.example.mymusicapp.App.App.position;
+//import static com.example.mymusicapp.App.App.position;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,12 +15,13 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.List;
 
 public class PlayPauseMusicReceiver extends BroadcastReceiver {
-
-    private List<Song> songList;
+//    int position;
+//    private List<Song> songList;
     @Override
     public void onReceive(Context context, Intent intent) {
-        songList = (List<Song>) intent.getSerializableExtra("music");
-        EventBus.getDefault().post(new PlayPauseMusicEvent(songList));
-        EventBus.getDefault().post(new MusicStartEvent(songList, position));
+//        songList = (List<Song>) intent.getSerializableExtra("music");
+//        position = intent.getIntExtra("position" , -1);
+        EventBus.getDefault().post(new PlayPauseMusicEvent());
+//        EventBus.getDefault().post(new MusicStartEvent(songList, position));
     }
 }
