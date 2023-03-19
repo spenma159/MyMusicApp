@@ -1,4 +1,4 @@
 package com.example.mymusicapp.EventBus;
 
-public class PauseMusicEvent {
+public class StopButtonEvent {
 }

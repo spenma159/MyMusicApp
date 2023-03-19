@@ -1,35 +1,24 @@
 package com.example.mymusicapp.Activity;
 
-//import static com.example.mymusicapp.App.App.mediaPlayer;
-//import static com.example.mymusicapp.App.App.mediaPlayer;
-//import static com.example.mymusicapp.App.App.position;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-import com.example.mymusicapp.API.Song;
-import com.example.mymusicapp.EventBus.CurrentlyPlayingEvent;
-import com.example.mymusicapp.EventBus.MusicStartEvent;
-import com.example.mymusicapp.EventBus.NextMusicEvent;
-import com.example.mymusicapp.EventBus.PauseMusicEvent;
-import com.example.mymusicapp.EventBus.PlayPauseButtonEvent;
-import com.example.mymusicapp.EventBus.PlayPauseMusicEvent;
-import com.example.mymusicapp.EventBus.PrevMusicEvent;
-import com.example.mymusicapp.EventBus.ResumeMusicEvent;
+import com.example.mymusicapp.EventBus.NextButtonEvent;
+import com.example.mymusicapp.EventBus.PrevButtonEvent;
 import com.example.mymusicapp.EventBus.SeekEvent;
 //import com.example.mymusicapp.EventBus.StartMusicEvent;
-import com.example.mymusicapp.EventBus.SyncNotificationLayoutEvent;
+import com.example.mymusicapp.EventBus.UpdateUiActivityEvent;
+import com.example.mymusicapp.EventBus.UpdateUiCurrentPositionEvent;
+import com.example.mymusicapp.EventBus.PlayPauseButtonEvent;
 import com.example.mymusicapp.R;
 import com.example.mymusicapp.Service.MusicService;
 
@@ -37,21 +26,14 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.Serializable;
-import java.util.List;
-
 //import wseemann.media.FFmpegMediaMetadataRetriever;
 
 public class NowPlayingActivity extends AppCompatActivity {
-    private static final String TAG = "message";
     private ImageView btnBack, albumCover, btnPlayPause, btnPlayNext, btnPlayPrev, btnStop;
     private TextView txtCurrDuration, txtEndDuration, txtTitle, txtSinger;
     private SeekBar seekBarSong;
-    List<Song> songList;
-    int position;
-    public static boolean flagPlay;
     private Handler handler = new Handler();
-    MusicService musicService;
+
     private void initialize (){
         btnBack = findViewById(R.id.btn_back_now_playing);
         albumCover = findViewById(R.id.cover_album);
@@ -64,80 +46,58 @@ public class NowPlayingActivity extends AppCompatActivity {
         txtTitle = findViewById(R.id.text_title_now_playing);
         txtSinger = findViewById(R.id.text_singer_now_playing);
         seekBarSong = findViewById(R.id.seekbar_now_paying);
-        musicService = new MusicService();
-        flagPlay = true;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_now_playing);
-        Log.i(TAG, "onCreate: ");
         if(getSupportActionBar() != null){
             getSupportActionBar().hide();
         }
-
         initialize();
-        Intent intent = this.getIntent();
-        songList = (List<Song>) intent.getSerializableExtra("music");
-        position = intent.getIntExtra("position", -1);
-        txtTitle.setText(songList.get(position).getTitle());
-        txtSinger.setText(songList.get(position).getSinger());
-        Glide.with(this)
-                .load(songList.get(position).getAlbum())
-                .apply(new RequestOptions().fitCenter())
-                .into(albumCover);
-
-        MusicService.startMusic(this, position, songList);
-//        seekBar();
         buttonClick();
-        EventBus.getDefault().register(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        seekBar();
+        EventBus.getDefault().register(this);
     }
 
     private void buttonClick() {
         btnPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                btnPlayPause.setImageResource(R.drawable.ic_pause);
-                EventBus.getDefault().post(new PlayPauseButtonEvent(position, songList));
+                EventBus.getDefault().post(new PlayPauseButtonEvent());
             }
         });
 
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                btnPlayPause.setImageResource(R.drawable.ic_play);
-                flagPlay = false;
-                MusicService.stopMusic(getApplicationContext(), position, songList);
+                Intent intent = new Intent(getApplicationContext(), MusicService.class);
+                stopService(intent);
             }
         });
 
         btnPlayNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                flagPlay = true;
-                EventBus.getDefault().post(new NextMusicEvent());
-                btnPlayPause.setImageResource(R.drawable.ic_pause);
+                EventBus.getDefault().post(new NextButtonEvent());
             }
         });
 
         btnPlayPrev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                flagPlay = true;
-                btnPlayPause.setImageResource(R.drawable.ic_pause);
-                EventBus.getDefault().post(new PrevMusicEvent());
+                EventBus.getDefault().post(new PrevButtonEvent());
             }
         });
     }
 
     private void seekBar(){
+
         seekBarSong.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -154,18 +114,15 @@ public class NowPlayingActivity extends AppCompatActivity {
 
             }
         });
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "onDestroy: ");
-    }
 
 
     private String formattedTime(int currentPosition) {
@@ -182,46 +139,31 @@ public class NowPlayingActivity extends AppCompatActivity {
         }
     }
 
+
+
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(CurrentlyPlayingEvent event) {
-        txtTitle.setText(event.songList.get(event.position).getTitle());
-        txtSinger.setText(event.songList.get(event.position).getSinger());
-        int totalDuration = event.duration / 1000;
-        seekBarSong.setProgress(event.currentPosition + 1);
+    public void onMessageEvent(UpdateUiCurrentPositionEvent event) {
+        int totalDuration = event.mediaDuration / 1000;
         seekBarSong.setMax(totalDuration);
+        seekBarSong.setProgress(event.mediaCurrentPosition + 1);
+        seekBar();
         txtEndDuration.setText(formattedTime(totalDuration));
-        txtCurrDuration.setText(formattedTime(event.currentPosition));
+        txtCurrDuration.setText(formattedTime(event.mediaCurrentPosition));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(UpdateUiActivityEvent event) {
+        if(event.mediaIsPlaying) btnPlayPause.setImageResource(R.drawable.ic_pause);
+        else btnPlayPause.setImageResource(R.drawable.ic_play);
+        txtTitle.setText(event.textTitle);
+        txtSinger.setText(event.textSinger);
 //        Glide.with(this)
-//                .load(songList.get(position).getAlbum())
+//                .load(event.albumCover)
 //                .apply(new RequestOptions().fitCenter())
 //                .into(albumCover);
-        Log.i(TAG, "current duration " + event.currentPosition);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(MusicStartEvent event) {
-        songList = MusicStartEvent.songList;
-        position = MusicStartEvent.position;
-        txtTitle.setText(songList.get(position).getTitle());
-        txtSinger.setText(songList.get(position).getSinger());
-        Glide.with(this)
-                .load(songList.get(position).getAlbum())
-                .apply(new RequestOptions().fitCenter())
-                .into(albumCover);
-        seekBar();
     }
 
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(PlayPauseMusicEvent event) {
-        if(!flagPlay){
-            EventBus.getDefault().post(new ResumeMusicEvent());
-            btnPlayPause.setImageResource(R.drawable.ic_pause);
-            flagPlay = true;
-        }else {
-            EventBus.getDefault().post(new PauseMusicEvent());
-            btnPlayPause.setImageResource(R.drawable.ic_play);
-            flagPlay = false;
-        }
-    }
+
+
 }

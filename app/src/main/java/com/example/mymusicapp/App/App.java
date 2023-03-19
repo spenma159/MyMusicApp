@@ -10,11 +10,6 @@ import android.provider.MediaStore;
 public class App extends Application {
 
     public static final String CHANNEL_ID = "channel music";
-//    public static int position;
-//    public static MediaPlayer mediaPlayer;
-
-
-
 
     @Override
     public void onCreate() {
@@ -27,7 +22,7 @@ public class App extends Application {
             NotificationChannel channelMusic =  new NotificationChannel(
                     CHANNEL_ID,
                     "Music Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_LOW
             );
 
             channelMusic.setDescription("This is channel for music that playing in the background");

@@ -55,11 +55,12 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(context, NowPlayingActivity.class);
-                intent.putExtra("position",position);
-//                App.position = position;
-                intent.putExtra("music", (Serializable) songList);
-                context.startActivity(intent);
+                Intent intentActivity = new Intent(context, NowPlayingActivity.class);
+                context.startActivity(intentActivity);
+                Intent intentService = new Intent(context, MusicService.class);
+                intentService.putExtra("position",position);
+                intentService.putExtra("music", (Serializable) songList);
+                context.startService(intentService);
             }
         });
     }
